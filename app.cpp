@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include <ohstream.hpp>
 #include <filesystem>
 
 #ifndef CPP_PROJECT_SOURCE_DIR
@@ -35,7 +36,7 @@ std::string read_file(const std::string &file_path)
     std::ifstream file(file_path);
     if (!file)
     {
-        std::cerr << "Error reading file: " << file_path << std::endl;
+        hh::console.err << "Error reading file: " << file_path << std::endl;
         return "";
     }
     return std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
@@ -46,7 +47,7 @@ void write_file(const std::string &file_path, const std::string &content)
     std::ofstream file(file_path);
     if (!file)
     {
-        std::cerr << "Error writing file: " << file_path << std::endl;
+        hh::console.err << "Error writing file: " << file_path << std::endl;
         return;
     }
     file << content;
@@ -55,6 +56,30 @@ void write_file(const std::string &file_path, const std::string &content)
 bool should_process_template(const std::string &file_path)
 {
     return true;
+}
+
+std::string remove_t_prefix(const std::string &name)
+{
+    if (name.length() >= 2 && name.substr(0, 2) == "T_")
+    {
+        return name.substr(2); // Remove "T_" prefix
+    }
+    return name;
+}
+
+std::filesystem::path process_path_with_t_prefix(const std::filesystem::path &relative_path)
+{
+    std::filesystem::path result;
+
+    // Process each component of the path
+    for (const auto &component : relative_path)
+    {
+        std::string component_str = component.string();
+        std::string processed_component = remove_t_prefix(component_str);
+        result /= processed_component;
+    }
+
+    return result;
 }
 
 void copy_template_recursively(const std::string &source_dir, const std::string &dest_dir,
@@ -74,13 +99,16 @@ void copy_template_recursively(const std::string &source_dir, const std::string 
 
             // Calculate relative path from source_dir
             auto relative_path = fs::relative(source_path, source_dir);
-            auto dest_path = fs::path(dest_dir) / relative_path;
+
+            // Process the relative path to remove T_ prefixes
+            auto processed_relative_path = process_path_with_t_prefix(relative_path);
+            auto dest_path = fs::path(dest_dir) / processed_relative_path;
 
             if (entry.is_directory())
             {
                 // Create directory
                 fs::create_directories(dest_path);
-                std::cout << "Created directory: " << dest_path << std::endl;
+                hh::console.log << "Created directory: " << dest_path << std::endl;
             }
             else if (entry.is_regular_file())
             {
@@ -89,7 +117,7 @@ void copy_template_recursively(const std::string &source_dir, const std::string 
 
                 if (file_content.empty() && fs::file_size(source_path) > 0)
                 {
-                    std::cerr << "Warning: Could not read file " << source_path << std::endl;
+                    hh::console.warn << "Warning: Could not read file " << source_path << std::endl;
                     continue;
                 }
 
@@ -101,7 +129,7 @@ void copy_template_recursively(const std::string &source_dir, const std::string 
 
                 // Write to destination
                 write_file(dest_path.string(), file_content);
-                std::cout << "Copied file: " << dest_path << std::endl;
+                hh::console.log << "Copied file: " << dest_path << std::endl;
 
                 // Make shell scripts executable
                 if (source_path.extension() == ".sh")
@@ -114,7 +142,7 @@ void copy_template_recursively(const std::string &source_dir, const std::string 
     }
     catch (const fs::filesystem_error &ex)
     {
-        std::cerr << "Filesystem error: " << ex.what() << std::endl;
+        hh::console.err << "Filesystem error: " << ex.what() << std::endl;
     }
 }
 
@@ -122,36 +150,36 @@ void build_cmake(int argc, char *argv[])
 {
     if (argc < 4)
     {
-        std::cerr << "Usage: " << argv[0] << " cmake <project_name> <project_exec>" << std::endl;
+        hh::console.err << "Usage: " << argv[0] << " cmake <project_name> <project_exec>" << std::endl;
         return;
     }
 
     std::string project_name = argv[2];
     std::string project_exec = argv[3];
 
-    std::string source_template_dir = CPP_PROJECT_SOURCE_DIR + std::string("templates/cmake");
+    std::string source_template_dir = CPP_PROJECT_SOURCE_DIR + std::string("templates/T_cmake");
 
-    std::cout << "Creating CMake project '" << project_name << "' with executable '" << project_exec << "'..." << std::endl;
-    std::cout << "Source template directory: " << source_template_dir << std::endl;
+    hh::console.log << "Creating CMake project '" << project_name << "' with executable '" << project_exec << "'..." << std::endl;
+    hh::console.log << "Source template directory: " << source_template_dir << std::endl;
 
     // Check if template directory exists
     if (!std::filesystem::exists(source_template_dir))
     {
-        std::cerr << "Error: Template directory does not exist: " << source_template_dir << std::endl;
+        hh::console.err << "Error: Template directory does not exist: " << source_template_dir << std::endl;
         return;
     }
 
     // Copy all template files recursively
     copy_template_recursively(source_template_dir, project_name, project_name, project_exec);
 
-    std::cout << "CMake project '" << project_name << "' with executable '" << project_exec << "' created successfully." << std::endl;
+    hh::console.suc << "CMake project '" << project_name << "' with executable '" << project_exec << "' created successfully." << std::endl;
 }
 
 int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        std::cerr << "Usage: " << argv[0] << " <what_project>" << std::endl;
+        hh::console.err << "Usage: " << argv[0] << " <what_project>" << std::endl;
         return 1;
     }
 
@@ -165,9 +193,9 @@ int main(int argc, char *argv[])
         }
         else
         {
-            std::cerr << "Unknown project type: " << what_project << std::endl;
-            std::cerr << "Available project: " << std::endl;
-            std::cerr << "  - cmake" << std::endl;
+            hh::console.err << "Unknown project type: " << what_project << std::endl;
+            hh::console.inf << "Available project: " << std::endl;
+            hh::console.inf << "  - cmake" << std::endl;
             return 1;
         }
     }

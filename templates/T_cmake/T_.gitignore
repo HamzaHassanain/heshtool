@@ -22,7 +22,7 @@ RelWithDebInfo/
 MinSizeRel/
 
 # IDE files
-# .vscode/
+.vscode/
 .vs/
 *.vcxproj
 *.vcxproj.filters
@@ -49,7 +49,7 @@ cmake-build-*/
 *.rcc
 
 # Visual Studio Code
-# .vscode/
+.vscode/
 *.code-workspace
 
 # Xcode

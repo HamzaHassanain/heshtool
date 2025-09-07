@@ -7,40 +7,40 @@ project(heshtool)
 find_package(Git QUIET)
 
 # Initialize and update git submodules to latest versions
-# if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
-#     # Update submodules as needed
-#     option(GIT_SUBMODULE "Check submodules during build" ON)
-#     option(GIT_SUBMODULE_UPDATE_LATEST "Update submodules to latest remote commits" ON)
+if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+    # Update submodules as needed
+    option(GIT_SUBMODULE "Check submodules during build" ON)
+    option(GIT_SUBMODULE_UPDATE_LATEST "Update submodules to latest remote commits" ON)
     
 
-#     # option(GIT_SUBMODULE OFF)
-#     # option(GIT_SUBMODULE_UPDATE_LATEST OFF)
+    # option(GIT_SUBMODULE OFF)
+    # option(GIT_SUBMODULE_UPDATE_LATEST OFF)
 
-#     if(GIT_SUBMODULE)
-#         message(STATUS "Initializing and updating submodules...")
+    if(GIT_SUBMODULE)
+        message(STATUS "Initializing and updating submodules...")
         
-#         # First, initialize submodules if they don't exist
-#         execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-#                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#                         RESULT_VARIABLE GIT_SUBMOD_INIT_RESULT)
-#         if(NOT GIT_SUBMOD_INIT_RESULT EQUAL "0")
-#             message(FATAL_ERROR "git submodule update --init --recursive failed with ${GIT_SUBMOD_INIT_RESULT}, please checkout submodules")
-#         endif()
+        # First, initialize submodules if they don't exist
+        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                        RESULT_VARIABLE GIT_SUBMOD_INIT_RESULT)
+        if(NOT GIT_SUBMOD_INIT_RESULT EQUAL "0")
+            message(FATAL_ERROR "git submodule update --init --recursive failed with ${GIT_SUBMOD_INIT_RESULT}, please checkout submodules")
+        endif()
         
-#         # If enabled, update submodules to latest remote commits
-#         if(GIT_SUBMODULE_UPDATE_LATEST)
-#             message(STATUS "Updating submodules to latest remote commits...")
-#             execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --remote --recursive
-#                             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#                             RESULT_VARIABLE GIT_SUBMOD_UPDATE_RESULT)
-#             if(NOT GIT_SUBMOD_UPDATE_RESULT EQUAL "0")
-#                 message(WARNING "git submodule update --remote --recursive failed with ${GIT_SUBMOD_UPDATE_RESULT}, continuing with current submodule versions")
-#             else()
-#                 message(STATUS "Submodules updated to latest versions successfully")
-#             endif()
-#         endif()
-#     endif()
-# endif()
+        # If enabled, update submodules to latest remote commits
+        if(GIT_SUBMODULE_UPDATE_LATEST)
+            message(STATUS "Updating submodules to latest remote commits...")
+            execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --remote --recursive
+                            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                            RESULT_VARIABLE GIT_SUBMOD_UPDATE_RESULT)
+            if(NOT GIT_SUBMOD_UPDATE_RESULT EQUAL "0")
+                message(WARNING "git submodule update --remote --recursive failed with ${GIT_SUBMOD_UPDATE_RESULT}, continuing with current submodule versions")
+            else()
+                message(STATUS "Submodules updated to latest versions successfully")
+            endif()
+        endif()
+    endif()
+endif()
 
 
 # Function to read .env file and set variables
@@ -89,6 +89,8 @@ file(GLOB SRC_FILES src/*.cpp)
 # Include the test subdirectory
 # add_subdirectory(tests)
 
+
+
 # Check environment variable
 if( HESH_TOOL_LOCAL_TEST AND HESH_TOOL_LOCAL_TEST STREQUAL "1")
 message(STATUS "Building as executable (HESH_TOOL_LOCAL_TEST=1)")
@@ -98,14 +100,15 @@ message(STATUS "Building as static library (HESH_TOOL_LOCAL_TEST!=1)")
 add_library(heshtool STATIC ${SRC_FILES})
 endif()
 
+target_include_directories(heshtool PRIVATE include ${PROJECT_SOURCE_DIR}/hostream)
 
 target_compile_definitions(heshtool PRIVATE CPP_PROJECT_SOURCE_DIR="${PROJECT_SOURCE_DIR}/")
-if( HESH_TOOL_LOCAL_TEST AND HESH_TOOL_LOCAL_TEST STREQUAL "1")
+# if( HESH_TOOL_LOCAL_TEST AND HESH_TOOL_LOCAL_TEST STREQUAL "1")
     target_compile_definitions(heshtool PRIVATE CPP_HESH_TOOL_LOCAL_TEST=true)
-endif()
+# endif()
 
 # Installation rules
-if( HESH_TOOL_LOCAL_TEST AND HESH_TOOL_LOCAL_TEST STREQUAL "1")
+# if( HESH_TOOL_LOCAL_TEST AND HESH_TOOL_LOCAL_TEST STREQUAL "1")
     # Install the executable to /usr/local/bin by default
     install(TARGETS heshtool
             RUNTIME DESTINATION bin
@@ -113,4 +116,4 @@ if( HESH_TOOL_LOCAL_TEST AND HESH_TOOL_LOCAL_TEST STREQUAL "1")
     
     # Set proper permissions
     install(CODE "execute_process(COMMAND chmod +x \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/bin/heshtool)")
-endif()
+# endif()

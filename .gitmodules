@@ -1,0 +1,3 @@
+[submodule "hostream"]
+	path = hostream
+	url = https://github.com/HamzaHassanain/hostream.git

@@ -11,35 +11,35 @@ cd "$(dirname "$0")"
 # Clean previous build if requested
 if [ "$1" = "clean" ]; then
     echo "Cleaning previous build..."
-    rm -rf build
+    rm -rf out
 fi
 
 # Create build directory if it doesn't exist
-mkdir -p build
+mkdir -p out
 
 # Configure the project with CMake
 echo "Configuring CMake..."
-cmake -S . -B build
+cmake -S . -B out
 
 # Build the project
 echo "Building project..."
-cd build
+cd out
 make -j$(nproc)
 cd ..
 
 echo "Build completed successfully!"
-echo "Executable location: build/{{project_exec}}"
+echo "Executable location: out/{{project_exec}}"
 
 # Optionally run the executable if 'run' argument is passed
 if [ "$1" = "run" ]; then
     echo "Running the application..."
-    ./build/{{project_exec}}
+    ./out/{{project_exec}}
 fi
 
 
 if [ "$1" = "test" ]; then
     echo "Running tests..."
-    cd build
+    cd out
     ctest --output-on-failure
     cd ..
 fi
